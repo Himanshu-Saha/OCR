@@ -1,43 +1,34 @@
-
-
-# from django.shortcuts import render,redirect
-# from .form import ImageForm
-# from .models import Image
-# # Create your views here.
-
-# def index(request):
-#     if request.method == "POST":
-#         form=ImageForm(data=request.POST,files=request.FILES)
-#         if form.is_valid():
-#             form.save()
-#             obj=form.instance
-
-#             return render(request,"main/index.html",{"obj":obj})
-#     else:
-#         form=ImageForm()
-#     img=Image.objects.all()
-#     return render(request,"main/index.html",{"img":img,"form":form})
-
 import pytesseract
 from PIL import Image
 from django.shortcuts import render
+from django.http import JsonResponse
 from .form import ImageForm
 from .models import Image as ImageModel
+from django.http import HttpResponse
+import json
 
 def index(request):
     if request.method == "POST":
         form = ImageForm(data=request.POST, files=request.FILES)
         if form.is_valid():
-            form.save()
-            obj = form.instance
-
-            return render(request, "main/index.html", {"obj": obj, "text": process(obj.image.path)})
+            return render(request, "main/index.html")
     else:
         form = ImageForm()
     img = ImageModel.objects.all()
     return render(request, "main/index.html", {"img": img, "form": form})
 
-def process(image_path):
+def process(request):
+    image_path = ""
+    image_url = ""
+    obj = None
+    if request.method == "POST":
+        form = ImageForm(data=request.POST, files=request.FILES)
+        if form.is_valid():
+            form.save()
+            obj = form.instance
+            image_path = obj.image.path
+            image_url = obj.image.url
     image =Image.open(image_path)
     extracted_text = pytesseract.image_to_string(image)
-    return extracted_text
+    response_data = {"extracted_text": extracted_text,"path":image_url}
+    return JsonResponse(response_data)

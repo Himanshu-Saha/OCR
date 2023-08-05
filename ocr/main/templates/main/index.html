@@ -4,41 +4,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <title>Document</title>
 </head>
 
 <body>
-    <!-- head -->
-    <div>
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Upload Form</button>
+        {% if obj %}
+        <p>Successfully Uploaded</p>
+        {% endif %}
+    </form>
+    <div id="inputDiv">
 
     </div>
-
-    <!-- body -->
-    <div>
-        <!-- input -->
-        <div>
-            <form action="." method="post" enctype="multipart/form-data">
-
-                {% csrf_token %}
-                {{form}}
-
-                <button type="submit">Upload</button>
-            </form>
-            {% if obj %}
-            <!-- <h3>Succesfully uploaded : {{obj.image.url}}</h3>
-            <img src="{{ obj.image.url }}" alt="image" > -->
-            <h5>{{text}}</h5>
-            {% endif %}
-            <hr>
-        </div>
-
-        <!-- output -->
+    <div id="outputDiv">
         
     </div>
-    <!-- footer -->
-    <div>
 
-    </div>
+    <script>
+        $(document).ready(function () {
+            $('#uploadForm').on('submit', function (e) {
+                e.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "process" %}',
+                    data: new FormData(this),
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        // Render the processed data in the output template
+                        // For demonstration purposes, let's assume the output is a JSON object
+                        // var myDict = JSON.parse(response);
+                        document.getElementById("outputDiv").innerHTML = response.extracted_text;
+                        var img = document.createElement("img");
+                        img.src = response.path;
+                        img.style.height="500px"
+                        img.style.width="500px"
+                        var src = document.getElementById("inputDiv");
+                        src.appendChild(img);
+                        console.log(response.path);
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    }
+                });
+            });
+        });
+    </script>
+
+
 
 </body>
 
